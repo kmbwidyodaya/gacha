@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gacha Berhadiah - Undian Lucky Spin</title>
+  <meta name="description"
+    content="Aplikasi Gacha & Undian Nama Berhadiah dengan animasi slot vertikal yang seru dan interaktif." />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <!-- Remixicon for Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <!-- Canvas Confetti -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="main-header">
+      <div class="header-left">
+        <button id="btn-reset-app" class="icon-btn" title="Reset / Ulangi" aria-label="Reset">
+          <i class="ri-arrow-go-back-line"></i>
+        </button>
+        <h1 class="app-title">
+          <span class="title-icon"></span> Gacha Berhadiah
+        </h1>
+      </div>
+
+      <div class="header-right">
+        <button id="btn-sound-toggle" class="icon-btn active" title="Suara FX" aria-label="Toggle Sound">
+          <i class="ri-volume-up-line" id="sound-icon"></i>
+        </button>
+        <button id="btn-open-menu" class="icon-btn menu-btn" title="Pengaturan & Data" aria-label="Menu">
+          <i class="ri-menu-3-line"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Reel Area -->
+    <main class="gacha-main">
+      <!-- Status Badge / Info Hadiah Saat Ini -->
+      <div class="status-banner-container">
+        <div id="prize-status-badge" class="prize-badge hidden">
+          <i class="ri-trophy-fill badge-icon"></i>
+          <span class="badge-label">Hadiah Putaran Ini:</span>
+          <strong id="current-prize-display">Satu Set Merchandise</strong>
+        </div>
+      </div>
+
+      <!-- Vertical Slot Reel Stage -->
+      <div class="reel-stage-wrapper">
+        <!-- Pointer Arrow Left -->
+        <div class="reel-pointer pointer-left">
+          <i class="ri-arrow-right-s-fill"></i>
+        </div>
+
+        <!-- Slot Frame -->
+        <div class="reel-viewport" id="reel-viewport">
+          <div class="reel-overlay-top"></div>
+          <div class="reel-overlay-bottom"></div>
+          <div class="selection-box-highlight"></div>
+
+          <!-- Inner Moving Track -->
+          <div class="reel-track" id="reel-track">
+            <!-- Items injected dynamically via JS -->
+          </div>
+        </div>
+
+        <!-- Pointer Arrow Right -->
+        <div class="reel-pointer pointer-right">
+          <i class="ri-arrow-left-s-fill"></i>
+        </div>
+      </div>
+
+      <!-- Spin Controls -->
+      <div class="controls-area">
+        <button id="btn-spin" class="spin-button">
+          <span class="spin-btn-glow"></span>
+          <span class="spin-btn-text">
+            <i class="ri-play-fill spin-icon"></i> SPIN SEKARANG
+          </span>
+        </button>
+        <p class="quick-info">Jumlah Peserta: <span id="participant-count-badge">0</span></p>
+      </div>
+    </main>
+  </div>
+
+  <!-- Drawer / Modal Settings Menu -->
+  <div id="menu-drawer" class="drawer-overlay hidden">
+    <div class="drawer-content">
+      <div class="drawer-header">
+        <h2><i class="ri-settings-4-line"></i> Pengaturan & Data Gacha</h2>
+        <button id="btn-close-drawer" class="close-btn" aria-label="Tutup"><i class="ri-close-line"></i></button>
+      </div>
+
+      <div class="drawer-body">
+        <!-- Tab Navigation -->
+        <div class="drawer-tabs">
+          <button class="tab-btn active" data-tab="tab-names">
+            <i class="ri-user-line"></i> Daftar Nama
+          </button>
+          <button class="tab-btn" data-tab="tab-prizes">
+            <i class="ri-gift-line"></i> Hadiah (Opsional)
+          </button>
+          <button class="tab-btn" data-tab="tab-options">
+            <i class="ri-equalizer-line"></i> Opsi Spin
+          </button>
+        </div>
+
+        <!-- Tab 1: Names -->
+        <div id="tab-names" class="tab-content active">
+          <div class="form-group">
+            <label for="names-input">
+              <span>Masukkan Nama-nama yang Ingin Diundi</span>
+              <small>(Satu nama per baris)</small>
+            </label>
+            <textarea id="names-input" rows="8"
+              placeholder="Contoh:&#10;Budi Santoso&#10;Siti Rahma&#10;Andi Wijaya&#10;Dewi Lestari&#10;Rian Pratama"></textarea>
+          </div>
+          <div class="btn-row">
+            <button id="btn-load-preset-names" class="sec-btn"><i class="ri-magic-line"></i> Contoh Nama</button>
+            <button id="btn-clear-names" class="sec-btn danger"><i class="ri-delete-bin-line"></i> Bersihkan</button>
+          </div>
+        </div>
+
+        <!-- Tab 2: Prizes (Optional) -->
+        <div id="tab-prizes" class="tab-content">
+          <div class="toggle-switch-wrapper">
+            <div class="toggle-info">
+              <strong>Aktifkan Sistem Hadiah</strong>
+              <span>Jika aktif, setiap pemenang akan mendapatkan hadiah</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="toggle-enable-prizes" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div id="prizes-editor-section">
+            <div class="prize-hierarchy-info">
+              <i class="ri-information-line"></i>
+              <span>Hierarki Hadiah: Hadiah yang diundi <strong>dimulai dari urutan TERBAWAH</strong> terlebih dahulu
+                hingga stoknya habis.</span>
+            </div>
+
+            <!-- Dynamic Prize List Container -->
+            <div id="prize-items-list" class="prize-items-list">
+              <!-- Item rows injected via JS -->
+            </div>
+
+            <div class="btn-row margin-top-md">
+              <button id="btn-add-prize-row" class="sec-btn primary-sub">
+                <i class="ri-add-circle-line"></i> Tambah Hadiah Baru
+              </button>
+              <button id="btn-load-preset-prizes" class="sec-btn">
+                <i class="ri-sparkles-line"></i> Load Contoh
+              </button>
+            </div>
+
+            <div class="form-group margin-top-md">
+              <label>Metode Pembagian Hadiah:</label>
+              <select id="prize-mode-select" class="custom-select">
+                <option value="sequential" selected>Berurutan Dari Terbawah (Rekomendasi)</option>
+                <option value="random">Acak dari stok yang tersedia</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 3: Options -->
+        <div id="tab-options" class="tab-content">
+          <div class="toggle-switch-wrapper">
+            <div class="toggle-info">
+              <strong>Hapus Pemenang Otomatis</strong>
+              <span>Nama pemenang akan dihapus dari daftar undian berikutnya</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="toggle-remove-winner" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="form-group margin-top-md">
+            <label for="spin-duration-select">Kecepatan & Durasi Spin:</label>
+            <select id="spin-duration-select" class="custom-select">
+              <option value="1200">⚡ Super Kencang / Kilat (1.2 detik)</option>
+              <option value="2000" selected>🚀 Kencang Sekali (2 detik)</option>
+              <option value="3500">⚡ Cepat (3.5 detik)</option>
+              <option value="5000">⏱️ Sedang (5 detik)</option>
+              <option value="8000">🎭 Mendebarkan (8 detik)</option>
+              <option value="custom">🔧 Custom Durasi...</option>
+            </select>
+          </div>
+
+          <div id="custom-duration-wrapper" class="form-group hidden margin-top-md">
+            <label for="custom-duration-input">
+              <span>Set Durasi Spin Custom (Detik):</span>
+              <span id="custom-duration-val" class="highlight-val">2.0s</span>
+            </label>
+            <div class="slider-with-input">
+              <input type="range" id="custom-duration-slider" min="0.5" max="15" step="0.5" value="2.0"
+                class="custom-range">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="drawer-footer">
+        <button id="btn-save-settings" class="primary-action-btn">
+          <i class="ri-check-line"></i> Simpan & Mulai Undian
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Winner Popup Modal -->
+  <div id="winner-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-glow-bg"></div>
+      <div class="modal-icon-header">
+        <div class="trophy-badge-wrapper">
+          <i class="ri-trophy-line trophy-icon"></i>
+        </div>
+      </div>
+
+      <h3 class="modal-subtitle">SELAMAT KEPADA!</h3>
+      <h2 id="winner-name-text" class="winner-name">Budi Santoso</h2>
+
+      <div id="winner-prize-container" class="winner-prize-box">
+        <span class="prize-tag-header"><i class="ri-gift-fill"></i> HADIAH YANG DIDAPATKAN:</span>
+        <h4 id="winner-prize-text" class="winner-prize">Smartphone Android Baru</h4>
+      </div>
+
+      <div class="modal-actions">
+        <button id="btn-spin-again" class="modal-btn primary">
+          <i class="ri-loop-right-line"></i> Putar Lagi
+        </button>
+        <button id="btn-close-modal" class="modal-btn secondary">
+          Tutup
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+
+</html>
