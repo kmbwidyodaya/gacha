@@ -116,7 +116,7 @@
 
       osc.start();
       osc.stop(audioCtx.currentTime + 0.03);
-    } catch (e) {}
+    } catch (e) { }
   }
 
   function playWinSound() {
@@ -143,7 +143,7 @@
         osc.start(audioCtx.currentTime + i * 0.07);
         osc.stop(audioCtx.currentTime + i * 0.07 + 0.45);
       });
-    } catch (e) {}
+    } catch (e) { }
   }
 
   // --- CONFETTI ANIMATION ENGINE ---
@@ -217,7 +217,7 @@
       try {
         const parsed = JSON.parse(saved);
         state = { ...state, ...parsed };
-      } catch (e) {}
+      } catch (e) { }
     } else {
       state.names = [...DEFAULT_NAMES];
       state.structuredPrizes = JSON.parse(JSON.stringify(DEFAULT_STRUCTURED_PRIZES));
@@ -358,7 +358,7 @@
       // Stock Column Input
       const stockWrapper = document.createElement('div');
       stockWrapper.className = 'prize-stock-wrapper';
-      
+
       const stockLabel = document.createElement('label');
       stockLabel.textContent = 'Stok:';
 
@@ -435,7 +435,11 @@
     }
 
     const fragment = document.createDocumentFragment();
-    state.names.forEach((name) => {
+
+    // Gunakan fungsi shuffleArray untuk mengacak tampilan nama awal di layar
+    const shuffledInitialNames = shuffleArray(state.names);
+
+    shuffledInitialNames.forEach((name) => {
       const item = document.createElement('div');
       item.className = 'slot-item';
       item.textContent = name;
@@ -467,21 +471,25 @@
     }
 
     // Build Scrolling Sequence for Top to Bottom reel
+    // Build Scrolling Sequence for Top to Bottom reel
     const duration = parseInt(state.spinDuration, 10) || 2000;
     const isUltraFast = duration <= 2000;
     const minItems = isUltraFast ? 75 : 45;
 
     let sequence = [];
     while (sequence.length < minItems) {
-      sequence = sequence.concat(state.names);
+      // Gunakan fungsi shuffle agar urutan nama diacak pada setiap perulangan visual
+      let shuffledNames = shuffleArray(state.names);
+      sequence = sequence.concat(shuffledNames);
     }
-    
+
     // Add Winner item
     sequence.push(currentWinner);
-    
-    // Add bottom padding items
+
+    // Add bottom padding items (dengan urutan acak)
+    let bottomPaddingNames = shuffleArray(state.names);
     for (let i = 0; i < VISIBLE_COUNT; i++) {
-      sequence.push(state.names[i % state.names.length]);
+      sequence.push(bottomPaddingNames[i % bottomPaddingNames.length]);
     }
 
     // Render sequence to DOM
@@ -713,3 +721,11 @@
   // Initialize App
   loadSavedState();
 })();
+function shuffleArray(array) {
+  let newArr = [...array];
+  for (let i = newArr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+  }
+  return newArr;
+}
